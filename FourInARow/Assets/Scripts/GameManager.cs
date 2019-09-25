@@ -30,7 +30,6 @@ public class GameManager : MonoBehaviour
         }
     }
     private Player[] Players;
-    private Player CurrentPlayer;
 
 
     //Check if instance is occupied:
@@ -53,7 +52,6 @@ public class GameManager : MonoBehaviour
     {
         turn = false;
         Players = new Player[] { new Player(0, 0, new Color(255, 255, 255)), new Player(1, 0, new Color(255, 0, 0)) };
-        AssignCurrentPlayer();
         Play();
     }
 
@@ -62,14 +60,40 @@ public class GameManager : MonoBehaviour
         //GAME GOES HERE
     }
 
-    private int iTurn()
+    // Returns Turn as an int
+    public int iTurn()
     {
         return Convert.ToInt32(turn);
     }
 
-    private void AssignCurrentPlayer()
+    public void ThisMoveWon()
     {
-        CurrentPlayer = Players[iTurn()];
+        Players[iTurn()].Score++;
+        TurnCompleted();
     }
 
+    public void TurnCompleted()
+    {
+        turn = !turn;
+    }
+
+    public bool getTurn()
+    {
+        return turn;
+    }
+
+    public Color getCurrentPlayerColor()
+    {
+        return Players[iTurn()].MyColor;
+    }
+
+    public Color getPlayerColor(bool player)
+    {
+        return Players[Convert.ToInt32(player)].MyColor;
+    }
+
+    public void ResetGame()
+    {
+        //???
+    }
 }
