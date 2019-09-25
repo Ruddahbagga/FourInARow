@@ -7,13 +7,12 @@ public class BoardLogic : MonoBehaviour
 {
     private int[,] board;
     private int columns, rows;
+    private int BackDiagTally, ForeDiagTally, HorTally, VerTally;
 
     // Start is called before the first frame update
     void Start()
     {
-        rows = 6; columns = 7;
-        board = new int[6, 7];
-        ClearBoard();
+        ResetGame();
     }
 
     // Since we'll have a column value, all we need to return is the lowest unoccupied slot
@@ -27,7 +26,6 @@ public class BoardLogic : MonoBehaviour
                 return r;
             }
         }
-
         //this last return can't be reached unless the forloop exits out without placing a piece, eg: full
         return -1;
     }
@@ -60,21 +58,84 @@ public class BoardLogic : MonoBehaviour
      * o <- |o| -> x    o    o                                                                                          *
      *                                                                                                                  *
      ********************************************************************************************************************/
-    private void SlotSelected(int r, int c)
+    private void SlotSelected(int c)
     {
         int SlotResult = FindLowestOpenSlot(c);
-        if (FindLowestOpenSlot(c) != -1)
+        if (SlotResult != -1)
         {
-            board[r, SlotResult] = GameManager.Instance.iTurn();
-            //ADD COLOUR TO SLOT BELOW
+            board[SlotResult, c] = GameManager.Instance.iTurn();
+            //ADD COLOUR TO SLOT AND UPDATE VISUALS BELOW
+
 
             //EVALUATE 4 IN A ROW BELOW
+            /* >>>>[dv, dh]<<<<
+         -> [-1, -1] [-1, 0] [-1, 1] -> F
+         -> [0, -1]  [0, 0]  [0, 1] ->
+          S [1, -1]  [1, 0]  [1, 1] ->
+            */
 
+            for (int v = SlotResult - 1; v <= SlotResult + 1; v++)
+            { //double-nested forloop to iterate through the possibilities
+                for (int h = c - 1; h <= c + 1; h++)
+                {
+                    if (IsInBounds(v, h) && !(v == SlotResult && h == c))
+                    {
+                        int tv = v;
+                        int th = h;
+                        int dv = v - SlotResult;
+                        int dh = h - c;
 
+                        //we're going to iterate through the slots in this direction until we either hit a slot without this player's piece in it, or we reach the end of the board
+                        while (IsInBounds(tv, th) && board[tv, th] == GameManager.Instance.iTurn())
+                        { //NEEDS CLEANUP: IsInBounds will be assessed first and cancel out on fail, so an out of bounds array check shouldn't happen, but it's still dodgy
+                            SolveTallyDirection(dv, dh);
+                            tv += dv;
+                            th += dh;
+                        }
+                    }
+                }
+            }
 
-            //CLEANUP AND POSTAMBLE BELOW
+            if (BackDiagTally >= 4 || ForeDiagTally >= 4 || HorTally >= 4 || VerTally >= 4)
+            { //that's a bingo
+                GameManager.Instance.ThisMoveWon();
+            }
+            else
+            {
+                ResetTallies();
+                GameManager.Instance.TurnCompleted();
+            }
+        }
+    }
 
+    private bool IsInBounds(int r, int c)
+    {
+        return (!(r < 0 || c < 0 || r > rows - 1 || c > columns - 1));
+    }
 
+    private void SolveTallyDirection(int r, int c)
+    {
+        int hash = r * 10 + c;
+        switch (hash)
+        {
+            case 11:
+            case -11:
+                BackDiagTally++;
+                break;
+            case 10:
+            case -10:
+                VerTally++;
+                break;
+            case 9:
+            case -9:
+                ForeDiagTally++;
+                break;
+            case 1:
+            case -1:
+                HorTally++;
+                break;
+            default:
+                break;
         }
     }
 
@@ -83,8 +144,20 @@ public class BoardLogic : MonoBehaviour
         GameManager.Instance.getCurrentPlayerColor(); //this will have to be assigned to the slot piece
     }
 
+    private void ResetTallies()
+    {
+        BackDiagTally = 1; ForeDiagTally = 1; HorTally = 1; VerTally = 1;
+    }
 
-    // Both sets and resets the game
+    private void ResetGame()
+    {
+        rows = 6; columns = 7;
+        board = new int[6, 7];
+        ResetTallies();
+        ClearBoard();
+    }
+
+    // Both sets and resets the game board
     private void ClearBoard()
     {
         for (int r = 0; r <= rows - 1; r++)
