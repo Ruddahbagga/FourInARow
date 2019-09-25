@@ -52,6 +52,13 @@ public class BoardLogic : MonoBehaviour
      * GameManager, otherwise we can go ahead and check if that piece filled up the board by checking the occupancy of  *
      * the top row, in which case it's a draw.                                                                          *
      * If the game isn't over after all that, then we're good to tell the GM to iterate the turn and wait for new input.*
+     *                                                                                                                  *
+     * 2     1     3    4 = WIN                                                                                         *
+     * o <- |o| -> o -> o                                                                                               *
+     *                                                                                                                  *
+     * 2     1     F    _ = FAIL (only 2 in a row)                                                                      *
+     * o <- |o| -> x    o    o                                                                                          *
+     *                                                                                                                  *
      ********************************************************************************************************************/
     private void SlotSelected(int r, int c)
     {
@@ -59,13 +66,15 @@ public class BoardLogic : MonoBehaviour
         if (FindLowestOpenSlot(c) != -1)
         {
             board[r, SlotResult] = GameManager.Instance.iTurn();
-            // ADD COLOUR TO SLOT
+            //ADD COLOUR TO SLOT BELOW
 
-            //EVALUATE 4 IN A ROW
+            //EVALUATE 4 IN A ROW BELOW
 
 
 
-            //WITHIN THIS BLOCK
+            //CLEANUP AND POSTAMBLE BELOW
+
+
         }
     }
 
